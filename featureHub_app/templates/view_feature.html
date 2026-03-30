@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ feature.title }} — FeatureHub
+{% endblock %}
+
+{% block content %}
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary mb-3">← Retour</a>
+
+    <h1>{{ feature.title }}</h1>
+
+    <p>
+        {% if feature.description %}
+            {{ feature.description }}
+        {% else %}
+            <em>Pas de description fournie.</em>
+        {% endif %}
+    </p>
+
+    <ul class="list-group w-50">
+        <li class="list-group-item"><strong>Nature :</strong> {{ feature.nature }}</li>
+        <li class="list-group-item"><strong>Statut :</strong> {{ feature.status }}</li>
+        <li class="list-group-item"><strong>Priorité :</strong> {{ feature.priority }}</li>
+    </ul>
+{% endblock %}

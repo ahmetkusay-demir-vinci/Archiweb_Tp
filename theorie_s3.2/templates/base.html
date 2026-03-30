@@ -1,0 +1,34 @@
+{% import "partials/_macros.html" as macros %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Bloc de titre (le titre dans le navigateur) que les enfants remplissent -->
+    <title>
+        {% block title %} <!-- Emplacement dynamique pour le titre de la page -->
+        {% endblock %}
+    </title>
+</head>
+<body>
+    <!-- Inclusion du nav -->
+    {% include "partials/_nav.html" %}
+    
+    <!-- Bloc de contenu que les enfants remplissent -->
+    <main>
+        {% block content %} <!-- Emplacement dynamique pour le contenu de la page -->
+        {% endblock %}
+    </main>
+    
+    <!-- Exemple : session affiche un message personnalisé -->
+    {% if session.user_id %}
+    <div style="background-color: #e8f4f8; padding: 10px; margin-top: 20px; border-radius: 5px;">
+        <p>👋 Bienvenue {{ session.username }}!</p>
+    </div>
+    {% endif %}
+    
+    <!-- Exemple : config affiche les paramètres globaux -->
+    <footer style="margin-top: 30px; padding: 10px; background-color: #f0f0f0; text-align: center;">
+        © 2026 {{ config.APP_NAME }} | Contactez : {{ config.MAIL_ADMIN }}
+    </footer>
+</body>
+</html>

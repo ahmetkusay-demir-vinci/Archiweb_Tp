@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Accueil — FeatureHub
+{% endblock %}
+
+{% block content %}
+    <!-- Statistiques -->
+    <div class="mb-4">
+        <h2>Tableau de bord</h2>
+        <p>Total des demandes : <strong>{{ features | length }}</strong></p>
+        <p>En attente : <strong>{{ en_attente }}</strong></p>
+    </div>
+
+    <!-- Grille de cartes -->
+    <div class="row">
+        {% for feature in features %}
+            {% include 'card.html' %}
+        {% endfor %}
+    </div>
+{% endblock %}

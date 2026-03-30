@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>{% if title %}{{ title }}{% else %}Mon App{% endif %}</title>
+</head>
+<body>
+    {% if title %}
+        <h1>{{ title }}</h1>
+    {% else %}
+        <h1>Mon App</h1>
+    {% endif %}
+    
+    {% if user %}
+        <h1>Bonjour {{ user.name }} !</h1>
+    {% endif %}
+    
+    {% if items %}
+        <ul>
+            {% for item in items %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo">
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

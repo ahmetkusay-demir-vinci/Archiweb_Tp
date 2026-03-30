@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block content %}
+<h1>Bienvenue à la maison !</h1>
+<p>C'est la page d'accueil.</p>
+
+{{ macros.button('Aller au Contact', '/contact') }}
+{{ macros.button('Voir Profil', '/profil') }}
+{% endblock %}

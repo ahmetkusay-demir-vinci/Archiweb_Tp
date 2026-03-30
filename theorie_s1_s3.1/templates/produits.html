@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Produits</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Catalogue de Produits</h1>
+    <p>Bienvenue, <strong>{{ user }}</strong> !</p>
+    <p>Prix total : <strong>{{ total }}€</strong></p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th>Prix</th>
+                <th>Stock</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produit in produits %}
+                {% if produit.stock > 0 %}
+                    <tr>
+                        <td>{{ produit.nom }}</td>
+                        <td>{{ produit.prix }}€</td>
+                        <td>{{ produit.stock }} unités</td>
+                        <td>✅ En stock</td>
+                    </tr>
+                {% else %}
+                    <tr class="rupture">
+                        <td>{{ produit.nom }}</td>
+                        <td>{{ produit.prix }}€</td>
+                        <td>{{ produit.stock }}</td>
+                        <td>❌ Rupture</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <p>Nombre de produits : <strong>{{ produits|length }}</strong></p>
+    
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Filtres Jinja2</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .demo { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            background: #f9f9f9;
+        }
+        code { 
+            background: #f0f0f0; 
+            padding: 2px 6px; 
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Démonstration des Filtres Jinja2</h1>
+    <p>Les filtres transforment les données avant affichage avec le symbole <code>|</code></p>
+
+    <!-- Filtre UPPER -->
+    <div class="demo">
+        <h2>Filtre UPPER</h2>
+        <p><strong>Code:</strong> <code>{{ ville | upper }}</code></p>
+        <p><strong>Résultat:</strong> {{ ville | upper }}</p>
+        <p>Description: Convertit le texte en MAJUSCULES</p>
+    </div>
+
+    <!-- Filtre LOWER -->
+    <div class="demo">
+        <h2>Filtre LOWER</h2>
+        <p><strong>Code:</strong> <code>{{ ville | capitalize }}</code></p>
+        <p><strong>Résultat:</strong> {{ ville | capitalize }}</p>
+        <p>Description: Met une majuscule au début et minuscules au reste</p>
+    </div>
+
+    <!-- Filtre LENGTH -->
+    <div class="demo">
+        <h2>Filtre LENGTH</h2>
+        <p><strong>Code:</strong> <code>{{ fruits | length }}</code></p>
+        <p><strong>Résultat:</strong> {{ fruits | length }} fruits</p>
+        <p><strong>Liste:</strong> {{ fruits }}</p>
+        <p>Description: Affiche le nombre d'éléments dans une collection</p>
+    </div>
+
+    <!-- Filtre TRUNCATE -->
+    <div class="demo">
+        <h2>Filtre TRUNCATE</h2>
+        <p><strong>Code:</strong> <code>{{ description | truncate(50) }}</code></p>
+        <p><strong>Résultat:</strong> {{ description | truncate(50) }}</p>
+        <p><strong>Original:</strong> {{ description }}</p>
+        <p>Description: Coupe le texte à N caractères et ajoute ...</p>
+    </div>
+
+    <!-- Filtre DEFAULT -->
+    <div class="demo">
+        <h2>Filtre DEFAULT</h2>
+        <p><strong>Code:</strong> <code>{{ auteur | default("Auteur inconnu") }}</code></p>
+        <p><strong>Résultat:</strong> {{ auteur | default("Auteur inconnu") }}</p>
+        <p>Description: Utilise une valeur de remplacement si la variable est None/vide</p>
+    </div>
+
+    <!-- Filtre SORT -->
+    <div class="demo">
+        <h2>Filtre SORT</h2>
+        <p><strong>Code:</strong> <code>{{ fruits | sort }}</code></p>
+        <p><strong>Résultat:</strong> {{ fruits | sort }}</p>
+        <p>Description: Trie les éléments par ordre alphabétique</p>
+    </div>
+
+    <!-- Filtre REVERSE -->
+    <div class="demo">
+        <h2>Filtre REVERSE</h2>
+        <p><strong>Code:</strong> <code>{{ fruits | reverse | list }}</code></p>
+        <p><strong>Résultat:</strong> {{ fruits | reverse | list }}</p>
+        <p>Description: Inverse l'ordre des éléments</p>
+    </div>
+
+    <!-- Filtre SORT sur dictionnaire -->
+    <div class="demo">
+        <h2>Filtre SORT avec Dictionnaire</h2>
+        <p><strong>Code:</strong> Tri par prix croissant</p>
+        <table border="1" cellpadding="10">
+            <tr>
+                <th>Produit</th>
+                <th>Prix (€)</th>
+            </tr>
+            {% for produit in produits_with_prix | sort(attribute='prix') %}
+                <tr>
+                    <td>{{ produit.nom }}</td>
+                    <td>{{ produit.prix }} €</td>
+                </tr>
+            {% endfor %}
+        </table>
+        <p>Description: Trie les dictionnaires par un attribut spécifique</p>
+    </div>
+
+    <!-- Combinaison de filtres -->
+    <div class="demo">
+        <h2>Combiner des Filtres</h2>
+        <p><strong>Code:</strong> <code>{{ ville | upper | truncate(5) }}</code></p>
+        <p><strong>Résultat:</strong> {{ ville | upper | truncate(5) }}</p>
+        <p>Description: On peut chaîner plusieurs filtres avec <code>|</code></p>
+    </div>
+
+</body>
+</html>
