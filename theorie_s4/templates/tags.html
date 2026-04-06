@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Checkboxes</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        form { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        .checkbox-group { margin: 15px 0; }
+        label { display: block; margin: 8px 0; }
+        input[type="checkbox"] { margin-right: 8px; }
+        button { padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .info { background: #e3f2fd; padding: 10px; margin: 20px 0; border-left: 4px solid #2196F3; }
+        .alert { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Exemple 3 : Checkboxes + getlist()</h1>
+
+        <!-- Messages flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/tags">
+            <h3>Sélectionnez des tags :</h3>
+            
+            <div>
+                <label><input type="checkbox" name="tags" value="Python"> Python</label>
+                <label><input type="checkbox" name="tags" value="Flask"> Flask</label>
+                <label><input type="checkbox" name="tags" value="HTML"> HTML</label>
+                <label><input type="checkbox" name="tags" value="JavaScript"> JavaScript</label>
+            </div>
+
+            <button type="submit">Valider Tags</button>
+        </form>
+
+        <p> Essayez : Cochez plusieurs tags et voyez le flash message afficher tous les tags sélectionnés</p>
+
+        <hr>
+        <p><a href="/">Retour à l'accueil</a></p>
+    </div>
+</body>
+</html>

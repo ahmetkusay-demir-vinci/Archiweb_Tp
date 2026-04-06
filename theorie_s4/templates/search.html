@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GET - Recherche</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        form { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        input { padding: 8px; width: 70%; }
+        button { padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .info { background: #e3f2fd; padding: 10px; margin: 20px 0; border-left: 4px solid #2196F3; }
+    </style>
+</head>
+<body>
+    < class="container">
+        <h1>Exemple 1 : GET (Recherche)</h1>
+
+        <form method="GET" action="/search">
+            <label>Rechercher :</label><br><br>
+            <input type="text" name="query" placeholder="Entrez un terme">
+            <button type="submit">Chercher</button>
+        </form>
+
+        <h2 style="color: green; margin-top: 20px;">{{ resultat }}</h2>
+        {% if resultat %}
+            <p>Regardez l'URL : elle contient ?query=... </p>
+        {% endif %}
+
+        <hr>
+        <p><a href="/">Retour à l'accueil</a></p>
+    </div>
+</body>
+</html>
