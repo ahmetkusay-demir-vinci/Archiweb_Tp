@@ -80,6 +80,42 @@ def add_feature():
     return render_template('add_feature.html', active_page='index')
 
 
+@app.route('/feature/<int:feature_id>/edit', methods=['GET', 'POST'])
+def edit_feature(feature_id):
+    feature = FeatureRequest.query.get_or_404(feature_id)
+
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        nature = request.form.get('nature', feature.nature)
+        priority = request.form.get('priority', feature.priority)
+        status = request.form.get('status', feature.status)
+
+        if not title:
+            flash("Le titre est obligatoire.", "danger")
+            return render_template('edit_feature.html', feature=feature, active_page='index')
+        if len(title) > 100:
+            flash("Le titre ne doit pas dépasser 100 caractères.", "danger")
+            return render_template('edit_feature.html', feature=feature, active_page='index')
+
+        # Mise à jour des attributs de l'objet
+        feature.title       = title
+        feature.description = description
+        feature.nature      = nature
+        feature.priority    = priority
+        feature.status      = status
+
+        try:
+            db.session.commit()
+            flash("Demande modifiée !", "success")
+        except Exception:
+            db.session.rollback()
+            flash("Erreur lors de la modification.", "danger")
+        return redirect(url_for('view_feature', feature_id=feature.id))
+
+    return render_template('edit_feature.html', feature=feature, active_page='index')
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
