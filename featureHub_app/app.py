@@ -1,6 +1,7 @@
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, request, redirect, url_for, flash
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'featurehub-secret-key'
 
 features_py = [
     {
@@ -61,6 +62,31 @@ def view_feature(feature_id):
     if feature is None:
         abort(404)
     return render_template('view_feature.html', feature=feature, active_page='index')
+
+
+@app.route('/feature/add', methods=['GET', 'POST'])
+def add_feature():
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        nature = request.form.get('nature', 'Feature')
+        priority = request.form.get('priority', 'Moyenne')
+
+        # Validation
+        if not title:
+            flash("Le titre est obligatoire.", "danger")
+            return render_template('add_feature.html', active_page='index')
+        if len(title) > 100:
+            flash("Le titre ne doit pas dépasser 100 caractères.", "danger")
+            return render_template('add_feature.html', active_page='index')
+
+        # Données valides — affichage temporaire dans la console
+        print(f"Nouvelle demande : titre={title}, nature={nature}, priorité={priority}")
+
+        flash("Demande ajoutée !", "success")
+        return redirect(url_for('index'))
+
+    return render_template('add_feature.html', active_page='index')
 
 
 @app.errorhandler(404)
