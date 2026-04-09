@@ -21,5 +21,6 @@
         <li class="list-group-item"><strong>Nature :</strong> {{ feature.nature }}</li>
         <li class="list-group-item"><strong>Statut :</strong> {{ feature.status }}</li>
         <li class="list-group-item"><strong>Priorité :</strong> {{ feature.priority }}</li>
+        <li class="list-group-item"><strong>Créée le :</strong> {{ feature.created_at.strftime('%d/%m/%Y à %H:%M') }}</li>
     </ul>
 {% endblock %}
