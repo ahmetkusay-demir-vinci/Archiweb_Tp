@@ -116,6 +116,19 @@ def edit_feature(feature_id):
     return render_template('edit_feature.html', feature=feature, active_page='index')
 
 
+@app.route('/feature/<int:feature_id>/delete', methods=['POST'])
+def delete_feature(feature_id):
+    feature = FeatureRequest.query.get_or_404(feature_id)
+    try:
+        db.session.delete(feature)
+        db.session.commit()
+        flash(f"Demande « {feature.title} » supprimée.", "success")
+    except Exception:
+        db.session.rollback()
+        flash("Erreur lors de la suppression.", "danger")
+    return redirect(url_for('index'))
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404

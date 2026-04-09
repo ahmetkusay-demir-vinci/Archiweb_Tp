@@ -8,6 +8,28 @@
     <div class="d-flex gap-2 mb-3">
         <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">← Retour</a>
         <a href="{{ url_for('edit_feature', feature_id=feature.id) }}" class="btn btn-warning">Modifier</a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"> Supprimer </button>
+    </div>
+
+    <!-- Modale de confirmation -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer la suppression</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Êtes-vous sûr de vouloir supprimer <strong>« {{ feature.title }} »</strong> ? Cette action est irréversible.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <form method="POST" action="{{ url_for('delete_feature', feature_id=feature.id) }}">
+                        <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <h1>{{ feature.title }}</h1>
