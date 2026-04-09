@@ -18,9 +18,16 @@
     </div>
 
     <!-- Grille de cartes -->
-    <div class="row">
-        {% for feature in features %}
-            {% include 'card.html' %}
-        {% endfor %}
-    </div>
+    {% if features %}
+        <div class="row">
+            {% for feature in features %}
+                {% include 'card.html' %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5 text-muted">
+            <p class="fs-5">Aucune demande pour l'instant.</p>
+            <a href="{{ url_for('add_feature') }}" class="btn btn-primary">Créer la première demande</a>
+        </div>
+    {% endif %}
 {% endblock %}

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from flask import Flask, render_template, abort, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -28,46 +28,12 @@ class FeatureRequest(db.Model):
 with app.app_context():
     db.create_all()
 
-features_py = [
-    {
-        'id': 1,
-        'title': 'Mode Sombre',
-        'description': 'Ajouter un thème sombre à l\'interface.',
-        'status': 'En attente',
-        'nature': 'Feature',
-        'priority': 'Haute'
-    },
-    {
-        'id': 2,
-        'title': 'Bug Login',
-        'description': '',
-        'status': 'Validé',
-        'nature': 'Bug',
-        'priority': 'Haute'
-    },
-    {
-        'id': 3,
-        'title': 'Améliorer les performances',
-        'description': 'Optimiser les requêtes SQL.',
-        'status': 'Rejeté',
-        'nature': 'Amélioration',
-        'priority': 'Moyenne'
-    },
-    {
-        'id': 4,
-        'title': 'Export CSV',
-        'description': 'Permettre l\'export des données en CSV.',
-        'status': 'En attente',
-        'nature': 'Feature',
-        'priority': 'Basse'
-    }
-]
-
 
 @app.route('/')
 def index():
-    en_attente_py = sum(1 for f in features_py if f['status'] == 'En attente') # On ajoute +1 pour chaque feature en attente
-    return render_template('index.html', features=features_py, en_attente=en_attente_py, active_page='index')
+    features = FeatureRequest.query.order_by(FeatureRequest.created_at.desc()).all()
+    en_attente = sum(1 for f in features if f.status == 'En attente')
+    return render_template('index.html', features=features, en_attente=en_attente, active_page='index') #features en orange correspond à la variable features dans index.html
 
 
 @app.route('/about')
@@ -77,15 +43,7 @@ def about():
 
 @app.route('/feature/<int:feature_id>')
 def view_feature(feature_id):
-    # Autre alternative, next() est un itérateur qui retourne le premier élément qui correspond ou None
-    # feature = next((f for f in features_py if f['id'] == feature_id), None)
-    feature = None
-    for f in features_py:
-        if f['id'] == feature_id:
-            feature = f
-            break
-    if feature is None:
-        abort(404)
+    feature = FeatureRequest.query.get_or_404(feature_id)
     return render_template('view_feature.html', feature=feature, active_page='index')
 
 
@@ -104,10 +62,19 @@ def add_feature():
             flash("Le titre ne doit pas dépasser 100 caractères.", "danger")
             return render_template('add_feature.html', active_page='index')
 
-        # Données valides — affichage temporaire dans la console
-        print(f"Nouvelle demande : titre={title}, nature={nature}, priorité={priority}")
-
-        flash("Demande ajoutée !", "success")
+        new_feature = FeatureRequest(
+            title=title,
+            description=description,
+            nature=nature,
+            priority=priority
+        )
+        try:
+            db.session.add(new_feature)
+            db.session.commit()
+            flash("Demande ajoutée !", "success")
+        except Exception:
+            db.session.rollback()
+            flash("Erreur lors de l'enregistrement.", "danger")
         return redirect(url_for('index'))
 
     return render_template('add_feature.html', active_page='index')
