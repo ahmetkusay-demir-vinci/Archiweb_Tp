@@ -1,7 +1,32 @@
+from datetime import datetime, timezone
 from flask import Flask, render_template, abort, request, redirect, url_for, flash
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'featurehub-secret-key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///featurehub.db'
+
+db = SQLAlchemy(app)
+
+
+# --- MODÉLISATION ---
+class FeatureRequest(db.Model):
+    __tablename__ = 'feature_requests'
+
+    id          = db.Column(db.Integer, primary_key=True)
+    title       = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    status      = db.Column(db.String, default='En attente')
+    nature      = db.Column(db.String, default='Feature')
+    priority    = db.Column(db.String, default='Moyenne')
+    created_at  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f'<FeatureRequest {self.id}: {self.title}>' # Exemple : <FeatureRequest 1: Dark Mode>
+
+# --- INITIALISATION ---
+with app.app_context():
+    db.create_all()
 
 features_py = [
     {
@@ -72,7 +97,6 @@ def add_feature():
         nature = request.form.get('nature', 'Feature')
         priority = request.form.get('priority', 'Moyenne')
 
-        # Validation
         if not title:
             flash("Le titre est obligatoire.", "danger")
             return render_template('add_feature.html', active_page='index')
