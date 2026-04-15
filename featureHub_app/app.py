@@ -1,10 +1,21 @@
+import os
 from datetime import datetime, timezone
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'featurehub-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///featurehub.db'
+
+# Configuration dossier destination fichier + taille max + extensions accepté
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 Mo max
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 db = SQLAlchemy(app)
 
@@ -20,6 +31,7 @@ class FeatureRequest(db.Model):
     nature      = db.Column(db.String, default='Feature')
     priority    = db.Column(db.String, default='Moyenne')
     created_at  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    filename    = db.Column(db.String, nullable=True)
 
     def __repr__(self):
         return f'<FeatureRequest {self.id}: {self.title}>' # Exemple : <FeatureRequest 1: Dark Mode>
@@ -62,11 +74,22 @@ def add_feature():
             flash("Le titre ne doit pas dépasser 100 caractères.", "danger")
             return render_template('add_feature.html', active_page='index')
 
+        # Gestion du fichier joint
+        saved_filename = None
+        file = request.files.get('file')
+        if file and file.filename:
+            if not allowed_file(file.filename):
+                flash("Extension non autorisée (png, jpg, jpeg, gif, pdf uniquement).", "danger")
+                return render_template('add_feature.html', active_page='index')
+            saved_filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], saved_filename))
+
         new_feature = FeatureRequest(
             title=title,
             description=description,
             nature=nature,
-            priority=priority
+            priority=priority,
+            filename=saved_filename
         )
         try:
             db.session.add(new_feature)

@@ -42,6 +42,21 @@
         {% endif %}
     </p>
 
+    {% if feature.filename %}
+        <div class="mt-3 mb-4">
+            <strong>Pièce jointe :</strong><br>
+            {% if feature.filename.rsplit('.', 1)[1].lower() in ['png', 'jpg', 'jpeg', 'gif'] %}
+                <img src="{{ url_for('static', filename='uploads/' ~ feature.filename) }}"
+                     alt="Pièce jointe" class="img-fluid rounded mt-2" style="max-height: 400px;">
+            {% else %}
+                <a href="{{ url_for('static', filename='uploads/' ~ feature.filename) }}"
+                   class="btn btn-outline-secondary mt-2" download>
+                    Télécharger {{ feature.filename }}
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <ul class="list-group w-50">
         <li class="list-group-item"><strong>Nature :</strong> {{ feature.nature }}</li>
         <li class="list-group-item"><strong>Statut :</strong> {{ feature.status }}</li>

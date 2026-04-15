@@ -6,7 +6,7 @@
     <a href="{{ url_for('index') }}" class="btn btn-outline-secondary mb-3">← Retour</a>
     <h2>Nouvelle demande</h2>
 
-    <form method="POST" class="mt-3" style="max-width: 600px;">
+    <form method="POST" enctype="multipart/form-data" class="mt-3" style="max-width: 600px;">
         <!-- Titre -->
         <div class="mb-3">
             <label for="title" class="form-label">Titre <span class="text-danger">*</span></label>
@@ -37,6 +37,12 @@
                 <option value="Moyenne" selected>Moyenne</option>
                 <option value="Basse">Basse</option>
             </select>
+        </div>
+
+        <!-- Pièce jointe -->
+        <div class="mb-3">
+            <label for="file" class="form-label">Pièce jointe (png, jpg, gif, pdf — 2 Mo max)</label>
+            <input type="file" class="form-control" id="file" name="file" accept=".png,.jpg,.jpeg,.gif,.pdf">
         </div>
 
         <button type="submit" class="btn btn-primary">Soumettre</button>
