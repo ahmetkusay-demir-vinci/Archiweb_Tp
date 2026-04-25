@@ -6,8 +6,8 @@
 
 {% block content %}
     <div class="d-flex gap-2 mb-3">
-        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">← Retour</a>
-        <a href="{{ url_for('edit_feature', feature_id=feature.id) }}" class="btn btn-warning">Modifier</a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">← Retour</a>
+        <a href="{{ url_for('main.edit_feature', feature_id=feature.id) }}" class="btn btn-warning">Modifier</a>
         <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"> Supprimer </button>
     </div>
 
@@ -24,7 +24,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <form method="POST" action="{{ url_for('delete_feature', feature_id=feature.id) }}">
+                    <form method="POST" action="{{ url_for('main.delete_feature', feature_id=feature.id) }}">
                         <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
                     </form>
                 </div>

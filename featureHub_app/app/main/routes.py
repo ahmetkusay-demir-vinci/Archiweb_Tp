@@ -1,65 +1,40 @@
 import os
-from datetime import datetime, timezone
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from werkzeug.utils import secure_filename
+from app.models import db, FeatureRequest
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'featurehub-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///featurehub.db'
+# Création du Blueprint "main" (cf. cours slide 23)
+# Remplace @app.route par @main.route
+main = Blueprint('main', __name__)
 
-# Configuration dossier destination fichier + taille max + extensions accepté
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 Mo max
-
+# Extensions autorisées pour l'upload
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-db = SQLAlchemy(app)
 
+# --- ROUTES ---
 
-# --- MODÉLISATION ---
-class FeatureRequest(db.Model):
-    __tablename__ = 'feature_requests'
-
-    id          = db.Column(db.Integer, primary_key=True)
-    title       = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    status      = db.Column(db.String, default='En attente')
-    nature      = db.Column(db.String, default='Feature')
-    priority    = db.Column(db.String, default='Moyenne')
-    created_at  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    filename    = db.Column(db.String, nullable=True)
-
-    def __repr__(self):
-        return f'<FeatureRequest {self.id}: {self.title}>' # Exemple : <FeatureRequest 1: Dark Mode>
-
-# --- INITIALISATION ---
-with app.app_context():
-    db.create_all()
-
-
-@app.route('/')
+@main.route('/')
 def index():
     features = FeatureRequest.query.order_by(FeatureRequest.created_at.desc()).all()
     en_attente = sum(1 for f in features if f.status == 'En attente')
-    return render_template('index.html', features=features, en_attente=en_attente, active_page='index') #features en orange correspond à la variable features dans index.html
+    return render_template('main/index.html', features=features, en_attente=en_attente, active_page='index')
 
 
-@app.route('/about')
+@main.route('/about')
 def about():
-    return render_template('about.html', active_page='about')
+    return render_template('main/about.html', active_page='about')
 
 
-@app.route('/feature/<int:feature_id>')
+@main.route('/feature/<int:feature_id>')
 def view_feature(feature_id):
     feature = FeatureRequest.query.get_or_404(feature_id)
-    return render_template('view_feature.html', feature=feature, active_page='index')
+    return render_template('main/view_feature.html', feature=feature, active_page='index')
 
 
-@app.route('/feature/add', methods=['GET', 'POST'])
+@main.route('/feature/add', methods=['GET', 'POST'])
 def add_feature():
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
@@ -69,10 +44,10 @@ def add_feature():
 
         if not title:
             flash("Le titre est obligatoire.", "danger")
-            return render_template('add_feature.html', active_page='index')
+            return render_template('main/add_feature.html', active_page='index')
         if len(title) > 100:
             flash("Le titre ne doit pas dépasser 100 caractères.", "danger")
-            return render_template('add_feature.html', active_page='index')
+            return render_template('main/add_feature.html', active_page='index')
 
         # Gestion du fichier joint
         saved_filename = None
@@ -80,9 +55,10 @@ def add_feature():
         if file and file.filename:
             if not allowed_file(file.filename):
                 flash("Extension non autorisée (png, jpg, jpeg, gif, pdf uniquement).", "danger")
-                return render_template('add_feature.html', active_page='index')
+                return render_template('main/add_feature.html', active_page='index')
             saved_filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], saved_filename))
+            # current_app remplace "app" pour accéder à la config dans un Blueprint
+            file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], saved_filename))
 
         new_feature = FeatureRequest(
             title=title,
@@ -98,12 +74,12 @@ def add_feature():
         except Exception:
             db.session.rollback()
             flash("Erreur lors de l'enregistrement.", "danger")
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
-    return render_template('add_feature.html', active_page='index')
+    return render_template('main/add_feature.html', active_page='index')
 
 
-@app.route('/feature/<int:feature_id>/edit', methods=['GET', 'POST'])
+@main.route('/feature/<int:feature_id>/edit', methods=['GET', 'POST'])
 def edit_feature(feature_id):
     feature = FeatureRequest.query.get_or_404(feature_id)
 
@@ -116,10 +92,10 @@ def edit_feature(feature_id):
 
         if not title:
             flash("Le titre est obligatoire.", "danger")
-            return render_template('edit_feature.html', feature=feature, active_page='index')
+            return render_template('main/edit_feature.html', feature=feature, active_page='index')
         if len(title) > 100:
             flash("Le titre ne doit pas dépasser 100 caractères.", "danger")
-            return render_template('edit_feature.html', feature=feature, active_page='index')
+            return render_template('main/edit_feature.html', feature=feature, active_page='index')
 
         # Mise à jour des attributs de l'objet
         feature.title       = title
@@ -134,12 +110,12 @@ def edit_feature(feature_id):
         except Exception:
             db.session.rollback()
             flash("Erreur lors de la modification.", "danger")
-        return redirect(url_for('view_feature', feature_id=feature.id))
+        return redirect(url_for('main.view_feature', feature_id=feature.id))
 
-    return render_template('edit_feature.html', feature=feature, active_page='index')
+    return render_template('main/edit_feature.html', feature=feature, active_page='index')
 
 
-@app.route('/feature/<int:feature_id>/delete', methods=['POST'])
+@main.route('/feature/<int:feature_id>/delete', methods=['POST'])
 def delete_feature(feature_id):
     feature = FeatureRequest.query.get_or_404(feature_id)
     try:
@@ -149,13 +125,10 @@ def delete_feature(feature_id):
     except Exception:
         db.session.rollback()
         flash("Erreur lors de la suppression.", "danger")
-    return redirect(url_for('index'))
+    return redirect(url_for('main.index'))
 
 
-@app.errorhandler(404)
+# --- GESTION D'ERREUR ---
+@main.app_errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
-
-
-if __name__ == '__main__':
-    app.run(debug=True)

@@ -7,7 +7,7 @@
 {% block content %}
     <!-- Bouton ajout -->
     <div class="mb-3">
-        <a href="{{ url_for('add_feature') }}" class="btn btn-primary">+ Ajouter une demande</a>
+        <a href="{{ url_for('main.add_feature') }}" class="btn btn-primary">+ Ajouter une demande</a>
     </div>
 
     <!-- Statistiques -->
@@ -21,13 +21,13 @@
     {% if features %}
         <div class="row">
             {% for feature in features %}
-                {% include 'card.html' %}
+                {% include 'main/card.html' %}
             {% endfor %}
         </div>
     {% else %}
         <div class="text-center py-5 text-muted">
             <p class="fs-5">Aucune demande pour l'instant.</p>
-            <a href="{{ url_for('add_feature') }}" class="btn btn-primary">Créer la première demande</a>
+            <a href="{{ url_for('main.add_feature') }}" class="btn btn-primary">Créer la première demande</a>
         </div>
     {% endif %}
 {% endblock %}
