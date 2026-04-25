@@ -4,6 +4,7 @@ from flask import Flask
 from flask_login import LoginManager
 from .models import db, User
 from .main.routes import main
+from .auth.routes import auth
 
 # LoginManager créé sans app, lié plus tard via login_manager.init_app(app)
 login_manager = LoginManager()
@@ -26,6 +27,9 @@ def create_app():
     # On lie db et login_manager à l'app (créés sans app dans leurs fichiers)
     db.init_app(app)
     login_manager.init_app(app)
+    # Si un utilisateur non connecté accède à une page @login_required,
+    # Flask-Login le redirige automatiquement vers cette route
+    login_manager.login_view = 'auth.login'
 
     # user_loader : Flask-Login appelle cette fonction à chaque requête
     # pour recharger l'utilisateur depuis la DB à partir de son id stocké en session
@@ -40,5 +44,6 @@ def create_app():
     # --- ENREGISTREMENT DES BLUEPRINTS ---
     # Import local pour éviter les imports circulaires (cf. cours slide 27)
     app.register_blueprint(main)
+    app.register_blueprint(auth)
 
     return app
