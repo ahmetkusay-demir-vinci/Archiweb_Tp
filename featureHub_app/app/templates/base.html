@@ -17,11 +17,19 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <!-- AVANT : url_for('index') — APRES : url_for('main.index') -->
             <a class="navbar-brand" href="{{ url_for('main.index') }}">FeatureHub</a>
-            <div class="navbar-nav">
+            <div class="navbar-nav me-auto">
                 <a class="nav-link {% if active_page == 'index' %}active{% endif %}" href="{{ url_for('main.index') }}">Accueil</a>
                 <a class="nav-link {% if active_page == 'about' %}active{% endif %}" href="{{ url_for('main.about') }}">À propos</a>
+            </div>
+            <div class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                    <span class="navbar-text me-3">Bonjour, {{ current_user.username }}</span>
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}">Déconnexion</a>
+                {% else %}
+                    <a class="nav-link {% if active_page == 'login' %}active{% endif %}" href="{{ url_for('auth.login') }}">Connexion</a>
+                    <a class="nav-link {% if active_page == 'register' %}active{% endif %}" href="{{ url_for('auth.register') }}">Inscription</a>
+                {% endif %}
             </div>
         </div>
     </nav>
