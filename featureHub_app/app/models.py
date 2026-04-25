@@ -1,6 +1,8 @@
 # Modèles SQLAlchemy
 from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # On crée db SANS l'application (pas de SQLAlchemy(app))
 # Il sera lié à l'app plus tard via db.init_app(app) dans la factory
@@ -22,3 +24,25 @@ class FeatureRequest(db.Model):
 
     def __repr__(self):
         return f'<FeatureRequest {self.id}: {self.title}>'
+
+
+# --- MODELE UTILISATEUR ---
+# UserMixin fournit automatiquement les propriétés requises par Flask-Login :
+# is_authenticated, is_active, is_anonymous, get_id()
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+
+    id            = db.Column(db.Integer, primary_key=True)
+    username      = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+
+    # On ne stocke jamais le mot de passe en clair, seulement son hash
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    # Retourne True si le mot de passe fourni correspond au hash stocké
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f'<User {self.username}>'

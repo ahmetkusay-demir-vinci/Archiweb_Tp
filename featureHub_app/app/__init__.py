@@ -1,8 +1,12 @@
 # Application Factory
 import os
 from flask import Flask
-from .models import db
+from flask_login import LoginManager
+from .models import db, User
 from .main.routes import main
+
+# LoginManager créé sans app, lié plus tard via login_manager.init_app(app)
+login_manager = LoginManager()
 
 
 # Cette fonctionne va configurer l'app et enregistrer les blueprints avant de la retourner
@@ -18,9 +22,16 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
     app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 Mo max
 
-    # --- INITIALISATION de la base de données ---
-    # On lie db à l'app (db a été créé sans app dans models.py)
+    # --- INITIALISATION des extensions ---
+    # On lie db et login_manager à l'app (créés sans app dans leurs fichiers)
     db.init_app(app)
+    login_manager.init_app(app)
+
+    # user_loader : Flask-Login appelle cette fonction à chaque requête
+    # pour recharger l'utilisateur depuis la DB à partir de son id stocké en session
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
 
     # Création des tables si elles n'existent pas encore
     with app.app_context():
