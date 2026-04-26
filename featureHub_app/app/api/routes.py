@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import FeatureRequest
+from app.models import db, FeatureRequest
 
 # url_prefix='/api/v1' : toutes les routes ci-dessous seront préfixées automatiquement.
 # Pourquoi versionner ? Si on casse le format de réponse demain, on crée /api/v2/
@@ -66,6 +66,33 @@ def get_features():
         'per_page': pagination.per_page,  # taille d'une page
         'data':     [f.to_dict() for f in pagination.items],  # résultats de la page
     })
+
+
+# ─── POST /api/v1/features ───────────────────────────────────────────────────
+
+@api.route('/features', methods=['POST'])
+def create_feature():
+    # request.get_json() désérialise le corps de la requête (Content-Type: application/json).
+    # Si le corps est vide ou non-JSON, retourne None → le `or {}` évite une erreur sur .get().
+    data = request.get_json() or {}
+
+    if not data.get('title'):
+        return make_error(400, 'Le titre est requis', 'title')
+
+    feature = FeatureRequest(
+        title=data['title'],
+        description=data.get('description', ''),
+        nature=data.get('nature', 'Feature'),
+        priority=data.get('priority', 'Moyenne'),
+        status='En attente',
+        author_id=1  # Remplacé en Exercice 5 par l'identité extraite du token JWT
+    )
+    db.session.add(feature)
+    db.session.commit()
+
+    # 201 Created : code standard pour une ressource créée avec succès.
+    # On retourne la ressource créée pour que le client connaisse son id et created_at.
+    return jsonify(feature.to_dict()), 201
 
 
 # ─── GET /api/v1/features/<id> ───────────────────────────────────────────────
