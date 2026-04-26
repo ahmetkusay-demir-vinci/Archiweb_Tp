@@ -46,4 +46,8 @@ def create_app():
     app.register_blueprint(main)
     app.register_blueprint(auth)
 
+    # Blueprint API : url_prefix déjà défini dans le Blueprint lui-même (/api/v1)
+    from .api.routes import api
+    app.register_blueprint(api)
+
     return app

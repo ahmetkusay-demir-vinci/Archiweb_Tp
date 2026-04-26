@@ -23,6 +23,22 @@ class FeatureRequest(db.Model):
     filename    = db.Column(db.String, nullable=True)
     author_id   = db.Column(db.Integer, db.ForeignKey('users.id')) # clé étrangère
 
+    def to_dict(self):
+        # Convertit l'objet SQLAlchemy en dict Python sérialisable en JSON.
+        # jsonify() ne sait pas convertir un objet SQLAlchemy directement.
+        # isoformat() → "2025-04-26T14:30:00" : format standard pour les dates en JSON.
+        # self.author est l'objet User lié via la relation (backref='author' dans User).
+        return {
+            'id':          self.id,
+            'title':       self.title,
+            'description': self.description,
+            'status':      self.status,
+            'nature':      self.nature,
+            'priority':    self.priority,
+            'created_at':  self.created_at.isoformat(),
+            'author':      self.author.username if self.author else None,
+        }
+
     def __repr__(self):
         return f'<FeatureRequest {self.id}: {self.title}>'
 
