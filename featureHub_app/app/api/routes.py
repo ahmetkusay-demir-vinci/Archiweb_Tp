@@ -95,6 +95,60 @@ def create_feature():
     return jsonify(feature.to_dict()), 201
 
 
+# ─── PUT /api/v1/features/<id> ── Remplacement total ────────────────────────
+# PUT : on fournit TOUS les champs. Ce qui n'est pas fourni revient à la valeur par défaut.
+# Utile quand on veut remplacer entièrement une ressource depuis un formulaire complet.
+
+@api.route('/features/<int:id>', methods=['PUT'])
+def update_feature_put(id):
+    feature = FeatureRequest.query.get(id)
+    if not feature:
+        return make_error(404, 'Demande introuvable')
+
+    data = request.get_json() or {}
+    if not data.get('title'):
+        return make_error(400, 'Le titre est requis pour un remplacement complet', 'title')
+
+    # Tous les champs sont écrasés. data.get('x', 'défaut') : si 'x' absent → valeur par défaut.
+    feature.title       = data['title']
+    feature.description = data.get('description', '')
+    feature.nature      = data.get('nature', 'Feature')
+    feature.priority    = data.get('priority', 'Moyenne')
+    feature.status      = data.get('status', 'En attente')
+
+    db.session.commit()
+    return jsonify(feature.to_dict())
+
+
+# ─── PATCH /api/v1/features/<id> ── Modification partielle ──────────────────
+# PATCH : on ne fournit que les champs à modifier. Les autres restent inchangés.
+# Utile pour des mises à jour ciblées : changer seulement le statut, par exemple.
+
+@api.route('/features/<int:id>', methods=['PATCH'])
+def update_feature_patch(id):
+    feature = FeatureRequest.query.get(id)
+    if not feature:
+        return make_error(404, 'Demande introuvable')
+
+    data = request.get_json() or {}
+
+    # 'x' in data : on vérifie la PRÉSENCE de la clé (pas sa valeur).
+    # Cela permet d'envoyer intentionnellement "" ou null pour vider un champ.
+    if 'title' in data:
+        feature.title = data['title']
+    if 'description' in data:
+        feature.description = data['description']
+    if 'nature' in data:
+        feature.nature = data['nature']
+    if 'priority' in data:
+        feature.priority = data['priority']
+    if 'status' in data:
+        feature.status = data['status']
+
+    db.session.commit()
+    return jsonify(feature.to_dict())
+
+
 # ─── GET /api/v1/features/<id> ───────────────────────────────────────────────
 
 @api.route('/features/<int:id>')
