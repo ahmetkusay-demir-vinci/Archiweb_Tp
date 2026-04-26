@@ -84,8 +84,13 @@ def add_feature():
 
 
 @main.route('/feature/<int:feature_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_feature(feature_id):
     feature = FeatureRequest.query.get_or_404(feature_id)
+
+    if feature.author_id != current_user.id:
+        flash("Vous n'avez pas la permission de modifier cette demande.", "danger")
+        return redirect(url_for('main.view_feature', feature_id=feature.id))
 
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
@@ -120,8 +125,14 @@ def edit_feature(feature_id):
 
 
 @main.route('/feature/<int:feature_id>/delete', methods=['POST'])
+@login_required
 def delete_feature(feature_id):
     feature = FeatureRequest.query.get_or_404(feature_id)
+
+    if feature.author_id != current_user.id:
+        flash("Vous n'avez pas la permission de supprimer cette demande.", "danger")
+        return redirect(url_for('main.view_feature', feature_id=feature.id))
+
     try:
         db.session.delete(feature)
         db.session.commit()
