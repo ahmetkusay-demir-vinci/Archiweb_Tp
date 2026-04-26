@@ -2,6 +2,7 @@
 import os
 from flask import Flask
 from flask_login import LoginManager
+from flask_jwt_extended import JWTManager
 from .models import db, User
 from .main.routes import main
 from .auth.routes import auth
@@ -23,10 +24,15 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
     app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2 Mo max
 
+    # Clé secrète utilisée pour signer les tokens JWT.
+    # En production, cette valeur doit être longue, aléatoire et stockée dans une variable d'environnement.
+    app.config['JWT_SECRET_KEY'] = 'changez-moi-en-production'
+
     # --- INITIALISATION des extensions ---
-    # On lie db et login_manager à l'app (créés sans app dans leurs fichiers)
+    # On lie db, login_manager et jwt à l'app (créés sans app dans leurs fichiers)
     db.init_app(app)
     login_manager.init_app(app)
+    JWTManager(app)
     # Si un utilisateur non connecté accède à une page @login_required,
     # Flask-Login le redirige automatiquement vers cette route
     login_manager.login_view = 'auth.login'

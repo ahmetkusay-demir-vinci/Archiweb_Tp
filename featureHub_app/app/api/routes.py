@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
-from app.models import db, FeatureRequest
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from werkzeug.security import check_password_hash
+from app.models import db, FeatureRequest, User
 
 # url_prefix='/api/v1' : toutes les routes ci-dessous seront préfixées automatiquement.
 # Pourquoi versionner ? Si on casse le format de réponse demain, on crée /api/v2/
@@ -9,73 +11,83 @@ api = Blueprint('api', __name__, url_prefix='/api/v1')
 
 def make_error(status_code, message, field=None):
     # Les clients d'une API attendent du JSON même en cas d'erreur, jamais du HTML.
-    # 'field' est optionnel : utile pour indiquer quel champ de formulaire est invalide.
-    # Exemple : make_error(400, 'Titre obligatoire', field='title')
-    # → {"error": "Titre obligatoire", "code": 400, "field": "title"}
+    # 'field' est optionnel : utile pour indiquer quel champ est invalide.
     response = {'error': message, 'code': status_code}
     if field:
         response['field'] = field
     return jsonify(response), status_code
 
 
+# ─── POST /api/v1/auth/token ── Obtention du token JWT ──────────────────────
+# Le client envoie ses identifiants une seule fois. En retour il reçoit un token
+# qu'il inclura dans toutes ses requêtes suivantes via le header :
+#   Authorization: Bearer <token>
+
+@api.route('/auth/token', methods=['POST'])
+def get_token():
+    data     = request.get_json() or {}
+    username = data.get('username')
+    password = data.get('password')
+
+    user = User.query.filter_by(username=username).first()
+
+    # On vérifie l'existence de l'utilisateur ET la validité du mot de passe en une condition.
+    # check_password_hash compare le mot de passe en clair au hash stocké en base.
+    if not user or not check_password_hash(user.password_hash, password):
+        return make_error(401, 'Identifiants invalides')
+
+    # identity : la valeur stockée dans le token, récupérable plus tard avec get_jwt_identity().
+    # On stocke le username (string) plutôt que l'id pour que ce soit lisible.
+    token = create_access_token(identity=username)
+    return jsonify(access_token=token), 200
+
+
 # ─── GET /api/v1/features ────────────────────────────────────────────────────
+# Lecture publique : pas de @jwt_required() — tout le monde peut lire la liste.
 
 @api.route('/features')
 def get_features():
-    # --- Paramètres de filtrage ---
-    # Contrairement à l'exo 1 (route web), ici on ne met PAS de valeur par défaut ''
-    # pour pouvoir tester if nature: (None est falsy, '' aussi, mais c'est plus propre).
     nature = request.args.get('nature')
     status = request.args.get('status')
-
-    # --- Paramètres de tri ---
-    # 'sort' : nom de la colonne sur laquelle trier (ex: 'title', 'created_at', 'priority')
-    # 'order' : 'desc' ou 'asc'
-    sort  = request.args.get('sort', 'created_at')
-    order = request.args.get('order', 'desc')
-
-    # --- Paramètres de pagination ---
+    sort   = request.args.get('sort', 'created_at')
+    order  = request.args.get('order', 'desc')
     page     = request.args.get('page',     1,  type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
-    # --- Construction de la requête ---
     query = FeatureRequest.query
 
-    # filter_by() est un raccourci de filter() pour les égalités simples.
-    # filter_by(nature=nature) équivaut à filter(FeatureRequest.nature == nature).
     if nature:
         query = query.filter_by(nature=nature)
     if status:
         query = query.filter_by(status=status)
 
-    # getattr(FeatureRequest, 'created_at', None) → retourne la colonne SQLAlchemy
-    # FeatureRequest.created_at si elle existe, sinon None.
-    # Cela évite une injection : on ne peut trier que sur de vraies colonnes du modèle.
     column = getattr(FeatureRequest, sort, None)
     if column:
         query = query.order_by(column.desc() if order == 'desc' else column.asc())
 
-    # paginate() découpe les résultats en pages.
-    # error_out=False : retourne une page vide au lieu d'un 404 si la page n'existe pas.
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
     return jsonify({
-        'total':    pagination.total,     # nombre total de résultats (toutes pages)
-        'page':     pagination.page,      # numéro de la page courante
-        'pages':    pagination.pages,     # nombre total de pages
-        'per_page': pagination.per_page,  # taille d'une page
-        'data':     [f.to_dict() for f in pagination.items],  # résultats de la page
+        'total':    pagination.total,
+        'page':     pagination.page,
+        'pages':    pagination.pages,
+        'per_page': pagination.per_page,
+        'data':     [f.to_dict() for f in pagination.items],
     })
 
 
 # ─── POST /api/v1/features ───────────────────────────────────────────────────
+# @jwt_required() : Flask-JWT-Extended lit le header "Authorization: Bearer <token>",
+# vérifie sa signature avec JWT_SECRET_KEY, et rejette la requête (401) si absent ou invalide.
 
 @api.route('/features', methods=['POST'])
+@jwt_required()
 def create_feature():
-    # request.get_json() désérialise le corps de la requête (Content-Type: application/json).
-    # Si le corps est vide ou non-JSON, retourne None → le `or {}` évite une erreur sur .get().
-    data = request.get_json() or {}
+    # get_jwt_identity() retourne la valeur stockée dans le token (le username, cf. get_token).
+    current_username = get_jwt_identity()
+    user = User.query.filter_by(username=current_username).first()
 
+    data = request.get_json() or {}
     if not data.get('title'):
         return make_error(400, 'Le titre est requis', 'title')
 
@@ -85,21 +97,17 @@ def create_feature():
         nature=data.get('nature', 'Feature'),
         priority=data.get('priority', 'Moyenne'),
         status='En attente',
-        author_id=1  # Remplacé en Exercice 5 par l'identité extraite du token JWT
+        author_id=user.id  # On utilise l'id de l'utilisateur authentifié par le token
     )
     db.session.add(feature)
     db.session.commit()
-
-    # 201 Created : code standard pour une ressource créée avec succès.
-    # On retourne la ressource créée pour que le client connaisse son id et created_at.
     return jsonify(feature.to_dict()), 201
 
 
 # ─── PUT /api/v1/features/<id> ── Remplacement total ────────────────────────
-# PUT : on fournit TOUS les champs. Ce qui n'est pas fourni revient à la valeur par défaut.
-# Utile quand on veut remplacer entièrement une ressource depuis un formulaire complet.
 
 @api.route('/features/<int:id>', methods=['PUT'])
+@jwt_required()
 def update_feature_put(id):
     feature = FeatureRequest.query.get(id)
     if not feature:
@@ -109,7 +117,6 @@ def update_feature_put(id):
     if not data.get('title'):
         return make_error(400, 'Le titre est requis pour un remplacement complet', 'title')
 
-    # Tous les champs sont écrasés. data.get('x', 'défaut') : si 'x' absent → valeur par défaut.
     feature.title       = data['title']
     feature.description = data.get('description', '')
     feature.nature      = data.get('nature', 'Feature')
@@ -121,10 +128,9 @@ def update_feature_put(id):
 
 
 # ─── PATCH /api/v1/features/<id> ── Modification partielle ──────────────────
-# PATCH : on ne fournit que les champs à modifier. Les autres restent inchangés.
-# Utile pour des mises à jour ciblées : changer seulement le statut, par exemple.
 
 @api.route('/features/<int:id>', methods=['PATCH'])
+@jwt_required()
 def update_feature_patch(id):
     feature = FeatureRequest.query.get(id)
     if not feature:
@@ -132,8 +138,6 @@ def update_feature_patch(id):
 
     data = request.get_json() or {}
 
-    # 'x' in data : on vérifie la PRÉSENCE de la clé (pas sa valeur).
-    # Cela permet d'envoyer intentionnellement "" ou null pour vider un champ.
     if 'title' in data:
         feature.title = data['title']
     if 'description' in data:
@@ -149,15 +153,29 @@ def update_feature_patch(id):
     return jsonify(feature.to_dict())
 
 
+# ─── DELETE /api/v1/features/<id> ────────────────────────────────────────────
+
+@api.route('/features/<int:id>', methods=['DELETE'])
+@jwt_required()
+def delete_feature(id):
+    feature = FeatureRequest.query.get(id)
+    if not feature:
+        return make_error(404, 'Demande introuvable')
+
+    db.session.delete(feature)
+    db.session.commit()
+
+    # 204 No Content : succès mais pas de corps de réponse (la ressource n'existe plus).
+    # 200 impliquerait un corps — ici il n'y a rien à retourner.
+    return '', 204
+
+
 # ─── GET /api/v1/features/<id> ───────────────────────────────────────────────
+# Lecture publique : pas de @jwt_required().
 
 @api.route('/features/<int:id>')
 def get_feature(id):
     feature = FeatureRequest.query.get(id)
-
-    # On ne peut pas utiliser get_or_404() ici : il renverrait du HTML.
-    # On gère le None manuellement pour rester en JSON.
     if not feature:
         return make_error(404, 'Demande introuvable')
-
     return jsonify(feature.to_dict())
