@@ -21,6 +21,7 @@ class FeatureRequest(db.Model):
     priority    = db.Column(db.String, default='Moyenne')
     created_at  = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     filename    = db.Column(db.String, nullable=True)
+    author_id   = db.Column(db.Integer, db.ForeignKey('users.id')) # clé étrangère
 
     def __repr__(self):
         return f'<FeatureRequest {self.id}: {self.title}>'
@@ -35,6 +36,7 @@ class User(UserMixin, db.Model):
     id            = db.Column(db.Integer, primary_key=True)
     username      = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
+    features      = db.relationship('FeatureRequest', backref='author', lazy=True)
 
     # On ne stocke jamais le mot de passe en clair, seulement son hash
     def set_password(self, password):

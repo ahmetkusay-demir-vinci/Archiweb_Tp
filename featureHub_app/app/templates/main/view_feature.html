@@ -62,5 +62,6 @@
         <li class="list-group-item"><strong>Statut :</strong> {{ feature.status }}</li>
         <li class="list-group-item"><strong>Priorité :</strong> {{ feature.priority }}</li>
         <li class="list-group-item"><strong>Créée le :</strong> {{ feature.created_at.strftime('%d/%m/%Y à %H:%M') }}</li>
+        <li class="list-group-item"><strong>Auteur :</strong> {{ feature.author.username if feature.author else 'Inconnu' }}</li>
     </ul>
 {% endblock %}

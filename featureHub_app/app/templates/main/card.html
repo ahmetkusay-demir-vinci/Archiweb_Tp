@@ -36,9 +36,10 @@
 
         </div>
 
-        <!-- Date de création et bouton détails -->
+        <!-- Date de création et auteur -->
         <p class="card-text mt-2">
-            <small class="text-muted">{{ feature.created_at.strftime('%d/%m/%Y à %H:%M') }}</small>
+            <small class="text-muted">{{ feature.created_at.strftime('%d/%m/%Y à %H:%M') }}</small><br>
+            <small class="text-muted">Par {{ feature.author.username if feature.author else 'Inconnu' }}</small>
         </p>
         <div class="mt-3">
             <a href="{{ url_for('main.view_feature', feature_id=feature.id) }}" class="btn btn-sm btn-outline-dark">Détails</a>

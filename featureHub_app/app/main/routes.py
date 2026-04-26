@@ -1,5 +1,6 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.models import db, FeatureRequest
 
@@ -35,6 +36,7 @@ def view_feature(feature_id):
 
 
 @main.route('/feature/add', methods=['GET', 'POST'])
+@login_required
 def add_feature():
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
@@ -65,7 +67,9 @@ def add_feature():
             description=description,
             nature=nature,
             priority=priority,
-            filename=saved_filename
+            filename=saved_filename,
+            #Lors de la création de la feature, on associe direct à l'utilisateur connecté
+            author_id=current_user.id 
         )
         try:
             db.session.add(new_feature)
