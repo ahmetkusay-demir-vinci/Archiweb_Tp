@@ -17,6 +17,54 @@
         <p>En attente : <strong>{{ en_attente }}</strong></p>
     </div>
 
+    <!-- Formulaire de filtres -->
+    <form method="GET" action="{{ url_for('main.index') }}" class="row g-2 mb-4 align-items-end">
+        <div class="col-sm-6 col-md-3">
+            <label for="nature" class="form-label fw-semibold">Nature</label>
+            <select name="nature" id="nature" class="form-select">
+                <option value="" {% if not nature_filter %}selected{% endif %}>Tous</option>
+                <option value="Feature"      {% if nature_filter == 'Feature' %}selected{% endif %}>Feature</option>
+                <option value="Bug"          {% if nature_filter == 'Bug' %}selected{% endif %}>Bug</option>
+                <option value="Amélioration" {% if nature_filter == 'Amélioration' %}selected{% endif %}>Amélioration</option>
+            </select>
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <label for="status" class="form-label fw-semibold">Statut</label>
+            <select name="status" id="status" class="form-select">
+                <option value="" {% if not status_filter %}selected{% endif %}>Tous</option>
+                <option value="En attente" {% if status_filter == 'En attente' %}selected{% endif %}>En attente</option>
+                <option value="Validé"     {% if status_filter == 'Validé' %}selected{% endif %}>Validé</option>
+                <option value="Rejeté"     {% if status_filter == 'Rejeté' %}selected{% endif %}>Rejeté</option>
+            </select>
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <label for="priority" class="form-label fw-semibold">Priorité</label>
+            <select name="priority" id="priority" class="form-select">
+                <option value="" {% if not priority_filter %}selected{% endif %}>Toutes</option>
+                <option value="Haute"   {% if priority_filter == 'Haute' %}selected{% endif %}>Haute</option>
+                <option value="Moyenne" {% if priority_filter == 'Moyenne' %}selected{% endif %}>Moyenne</option>
+                <option value="Basse"   {% if priority_filter == 'Basse' %}selected{% endif %}>Basse</option>
+            </select>
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <label for="sort" class="form-label fw-semibold">Tri</label>
+            <select name="sort" id="sort" class="form-select">
+                <option value="date_desc" {% if sort_filter == 'date_desc' %}selected{% endif %}>Date décroissante</option>
+                <option value="date_asc"  {% if sort_filter == 'date_asc' %}selected{% endif %}>Date croissante</option>
+                <option value="title_az"  {% if sort_filter == 'title_az' %}selected{% endif %}>Titre A-Z</option>
+                <option value="priority"  {% if sort_filter == 'priority' %}selected{% endif %}>Priorité</option>
+            </select>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-secondary">Filtrer</button>
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">Réinitialiser les filtres</a>
+        </div>
+    </form>
+
     <!-- Grille de cartes -->
     {% if features %}
         <div class="row">
@@ -26,8 +74,8 @@
         </div>
     {% else %}
         <div class="text-center py-5 text-muted">
-            <p class="fs-5">Aucune demande pour l'instant.</p>
-            <a href="{{ url_for('main.add_feature') }}" class="btn btn-primary">Créer la première demande</a>
+            <p class="fs-5">Aucune demande ne correspond à vos critères.</p>
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">Réinitialiser les filtres</a>
         </div>
     {% endif %}
 {% endblock %}

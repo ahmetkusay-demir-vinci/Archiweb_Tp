@@ -2,6 +2,7 @@ import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
+from sqlalchemy import case
 from app.models import db, FeatureRequest
 
 # Création du Blueprint "main" (cf. cours slide 23)
@@ -19,9 +20,61 @@ def allowed_file(filename):
 
 @main.route('/')
 def index():
-    features = FeatureRequest.query.order_by(FeatureRequest.created_at.desc()).all()
+    # Le formulaire HTML est en method="GET" : les valeurs arrivent dans l'URL.
+    # Exemple d'URL générée : /?nature=Bug&status=Validé&sort=title_az
+    #
+    # request.args est un dict qui contient ces paramètres d'URL.
+    # request.args.get('nature', '') lit le paramètre "nature" de l'URL.
+    #   → 'nature' DOIT être identique à l'attribut name="nature" du <select> dans le HTML.
+    #   → '' est la valeur par défaut si le paramètre est absent (= "Tous" = pas de filtre).
+    nature_filter   = request.args.get('nature', '')
+    status_filter   = request.args.get('status', '')
+    priority_filter = request.args.get('priority', '')
+    sort_filter     = request.args.get('sort', 'date_desc')
+
+    # On part d'une requête de base sans filtre, puis on en ajoute selon les paramètres.
+    query = FeatureRequest.query
+
+    # On ne filtre que si une valeur est choisie (chaîne non vide = option choisie).
+    if nature_filter:
+        query = query.filter(FeatureRequest.nature == nature_filter)
+    if status_filter:
+        query = query.filter(FeatureRequest.status == status_filter)
+    if priority_filter:
+        query = query.filter(FeatureRequest.priority == priority_filter)
+
+    # Tri : on mappe la valeur du <select> "sort" à une clause ORDER BY SQLAlchemy.
+    if sort_filter == 'date_asc':
+        query = query.order_by(FeatureRequest.created_at.asc())
+    elif sort_filter == 'title_az':
+        query = query.order_by(FeatureRequest.title.asc())
+    elif sort_filter == 'priority':
+        # CASE WHEN SQL : Haute=1, Moyenne=2, Basse=3 → ordre personnalisé
+        priority_order = case(
+            (FeatureRequest.priority == 'Haute',   1),
+            (FeatureRequest.priority == 'Moyenne', 2),
+            (FeatureRequest.priority == 'Basse',   3),
+            else_=4
+        )
+        query = query.order_by(priority_order)
+    else:  # 'date_desc' par défaut
+        query = query.order_by(FeatureRequest.created_at.desc())
+
+    features = query.all()
     en_attente = sum(1 for f in features if f.status == 'En attente')
-    return render_template('main/index.html', features=features, en_attente=en_attente, active_page='index')
+
+    # On repasse les valeurs de filtre au template pour que les <select>
+    # affichent la sélection courante après soumission du formulaire.
+    return render_template(
+        'main/index.html',
+        features=features,
+        en_attente=en_attente,
+        active_page='index',
+        nature_filter=nature_filter,
+        status_filter=status_filter,
+        priority_filter=priority_filter,
+        sort_filter=sort_filter,
+    )
 
 
 @main.route('/about')
